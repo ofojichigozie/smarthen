@@ -16,7 +16,7 @@
 #if DEV_MODE
   #define API_BASE_URL  "http://192.168.0.170:5000/api"
 #else
-  #define API_BASE_URL  "https://your-production-url.com/api"
+  #define API_BASE_URL  "https://smarthen-be.onrender.com/api"
 #endif
 
 #define HARDWARE_API_KEY "4pQ2wK8mN5zR7vX3jG1hF9dC6bS0eT2v"
