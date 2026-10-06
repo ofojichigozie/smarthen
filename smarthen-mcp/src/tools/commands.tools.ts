@@ -1,9 +1,12 @@
-import { McpServer } from '@modelcontextprotocol/server';
+import { McpServer, inputRequired, acceptedContent } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { apiClient } from '../lib/api-client.js';
 import { Command, PaginatedData } from '../types.js';
 import { toolSuccess, toolError } from '../lib/tool-result.js';
-import { elicitConfirmation } from '../lib/elicitation.js';
+
+const confirmationSchema = z.object({
+  confirm: z.boolean().meta({ title: 'Confirm' }),
+});
 
 export const registerCommandTools = (server: McpServer): void => {
   server.registerTool(
@@ -57,29 +60,27 @@ export const registerCommandTools = (server: McpServer): void => {
       }),
     },
     async ({ command }, ctx) => {
-      const elicitation = await elicitConfirmation(
-        ctx,
-        `The assistant wants to send the command "${command}" to the farm. Confirm?`,
-      );
-
-      if (elicitation.outcome === 'unsupported') {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: 'This client does not support confirmation prompts. Write operations are disabled.',
-            },
-          ],
-          isError: true,
-        };
+      // --- Pass 1: no answer yet, ask for confirmation --------------------
+      if (!ctx.mcpReq.inputResponses?.confirm) {
+        return inputRequired({
+          inputRequests: {
+            confirm: inputRequired.elicit({
+              message: `The smarthen assistant wants to send the command "${command}" to the farm. Confirm?`,
+              requestedSchema: confirmationSchema,
+            }),
+          },
+        });
       }
 
-      if (elicitation.outcome !== 'accepted') {
+      // --- Pass 2: user answered — check whether it was an acceptance ----
+      const confirmed = acceptedContent(ctx.mcpReq.inputResponses, 'confirm', confirmationSchema);
+
+      if (confirmed?.confirm !== true) {
         return {
           content: [
             {
               type: 'text' as const,
-              text: `Command ${elicitation.outcome}. No action was taken.`,
+              text: 'Command declined. No action was taken.',
             },
           ],
         };

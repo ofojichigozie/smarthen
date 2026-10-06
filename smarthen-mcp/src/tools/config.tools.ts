@@ -1,9 +1,12 @@
-import { McpServer } from '@modelcontextprotocol/server';
-import z from 'zod';
+import { McpServer, inputRequired, acceptedContent } from '@modelcontextprotocol/server';
+import * as z from 'zod/v4';
 import { apiClient } from '../lib/api-client.js';
 import { Config } from '../types.js';
 import { toolSuccess, toolError } from '../lib/tool-result.js';
-import { elicitConfirmation } from '../lib/elicitation.js';
+
+const confirmationSchema = z.object({
+  confirm: z.boolean().meta({ title: 'Confirm' }),
+});
 
 export const registerConfigTools = (server: McpServer): void => {
   server.registerTool(
@@ -81,33 +84,31 @@ export const registerConfigTools = (server: McpServer): void => {
         };
       }
 
-      const summary = entries
-        .map(([key, value]) => `  • ${key} → ${JSON.stringify(value)}`)
-        .join('\n');
+      // --- Pass 1: no answer yet, ask for confirmation --------------------
+      if (!ctx.mcpReq.inputResponses?.confirm) {
+        const summary = entries
+          .map(([key, value]) => `  • ${key} → ${JSON.stringify(value)}`)
+          .join('\n');
 
-      const elicitation = await elicitConfirmation(
-        ctx,
-        `The assistant wants to update the farm configuration:\n\n${summary}\n\nConfirm?`,
-      );
-
-      if (elicitation.outcome === 'unsupported') {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: 'This client does not support confirmation prompts. Write operations are disabled.',
-            },
-          ],
-          isError: true,
-        };
+        return inputRequired({
+          inputRequests: {
+            confirm: inputRequired.elicit({
+              message: `The assistant wants to update the farm configuration:\n\n${summary}\n\nConfirm?`,
+              requestedSchema: confirmationSchema,
+            }),
+          },
+        });
       }
 
-      if (elicitation.outcome !== 'accepted') {
+      // --- Pass 2: user answered — check whether it was an acceptance ----
+      const confirmed = acceptedContent(ctx.mcpReq.inputResponses, 'confirm', confirmationSchema);
+
+      if (confirmed?.confirm !== true) {
         return {
           content: [
             {
               type: 'text' as const,
-              text: `Update ${elicitation.outcome}. No changes were saved.`,
+              text: 'Update declined. No changes were saved.',
             },
           ],
         };
