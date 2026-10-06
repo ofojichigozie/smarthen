@@ -3,6 +3,7 @@ import * as z from 'zod/v4';
 import { apiClient } from '../lib/api-client.js';
 import { Command, PaginatedData } from '../types.js';
 import { toolSuccess, toolError } from '../lib/tool-result.js';
+import { elicitConfirmation } from '../lib/elicitation.js';
 
 export const registerCommandTools = (server: McpServer): void => {
   server.registerTool(
@@ -35,6 +36,57 @@ export const registerCommandTools = (server: McpServer): void => {
           limit,
           skip,
         });
+        return toolSuccess(response.data);
+      } catch (error) {
+        return toolError(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    'send_command',
+    {
+      description:
+        'Send a control command to the poultry farm. The admin will be asked to ' +
+        'confirm before the command is executed. Use this when the user explicitly ' +
+        'asks to turn something on/off or dispense feed.',
+      inputSchema: z.object({
+        command: z
+          .enum(['fan_on', 'fan_off', 'bulb_on', 'bulb_off', 'feed_dispense'])
+          .describe('The control command to send to the farm'),
+      }),
+    },
+    async ({ command }, ctx) => {
+      const elicitation = await elicitConfirmation(
+        ctx,
+        `The assistant wants to send the command "${command}" to the farm. Confirm?`,
+      );
+
+      if (elicitation.outcome === 'unsupported') {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: 'This client does not support confirmation prompts. Write operations are disabled.',
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      if (elicitation.outcome !== 'accepted') {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Command ${elicitation.outcome}. No action was taken.`,
+            },
+          ],
+        };
+      }
+
+      try {
+        const response = await apiClient.post<Command>('/commands', { command });
         return toolSuccess(response.data);
       } catch (error) {
         return toolError(error);
