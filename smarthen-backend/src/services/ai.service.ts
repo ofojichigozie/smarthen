@@ -1,5 +1,4 @@
 import { createMCPClient, type MCPClient } from '@ai-sdk/mcp';
-import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { streamText, isStepCount } from 'ai';
 import { AppError } from '../middleware/error.middleware';
@@ -9,23 +8,16 @@ const google = createGoogleGenerativeAI({
 });
 
 const createClient = async (): Promise<MCPClient> => {
-  const mode = process.env.MCP_SERVER_MODE ?? 'stdio';
-
-  if (mode === 'http') {
-    return createMCPClient({
-      transport: {
-        type: 'http',
-        url: process.env.MCP_SERVER_URL!,
-      },
-    });
+  if (!process.env.MCP_SERVER_URL) {
+    throw new AppError('MCP_SERVER_URL is not configured', 500);
   }
 
-  const stdioTransport = new Experimental_StdioMCPTransport({
-    command: 'node',
-    args: [process.env.MCP_SERVER_PATH ?? '../smarthen-mcp/dist/index.js'],
+  return createMCPClient({
+    transport: {
+      type: 'http',
+      url: process.env.MCP_SERVER_URL,
+    },
   });
-
-  return createMCPClient({ transport: stdioTransport });
 };
 
 export const streamChat = async (message: string) => {
@@ -39,7 +31,7 @@ export const streamChat = async (message: string) => {
     const tools = await mcpClient.tools();
 
     const result = streamText({
-      model: google('gemini-2.5-flash'),
+      model: google('gemini-3.8-flash'),
       instructions: `You are the Smarthen assistant, an AI helper for a smart poultry farm management system.
 
         You have access to tools that read live sensor data, historical readings, system configuration, and command history. Use them to answer questions accurately rather than guessing.
