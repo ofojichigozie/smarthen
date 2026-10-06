@@ -5,7 +5,7 @@ type TransportMode = 'stdio' | 'http';
 interface Config {
   transport: TransportMode;
   port: number;
-  backendUrl: string;
+  apiUrl: string;
   serviceApiKey: string;
 }
 
@@ -27,6 +27,6 @@ const parseTransport = (value: string): TransportMode => {
 export const config: Config = {
   transport: parseTransport(process.env.MCP_TRANSPORT ?? 'stdio'),
   port: Number(process.env.MCP_PORT ?? 3001),
-  backendUrl: required('BACKEND_URL').replace(/\/$/, ''), // strip trailing slash
+  apiUrl: required('API_URL').replace(/\/$/, ''),
   serviceApiKey: required('SERVICE_API_KEY'),
 };

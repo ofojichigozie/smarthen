@@ -34,7 +34,7 @@ export class ApiError extends Error {
 // ---------------------------------------------------------------------------
 
 const buildUrl = (path: string, query?: Query): string => {
-  const url = new URL(`${config.backendUrl}${path}`);
+  const url = new URL(`${config.apiUrl}${path}`);
 
   if (query) {
     for (const [key, value] of Object.entries(query)) {
