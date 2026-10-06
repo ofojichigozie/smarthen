@@ -65,7 +65,7 @@ export const registerCommandTools = (server: McpServer): void => {
         return inputRequired({
           inputRequests: {
             confirm: inputRequired.elicit({
-              message: `The smarthen assistant wants to send the command "${command}" to the farm. Confirm?`,
+              message: `The assistant wants to send the command "${command}" to the farm. Confirm?`,
               requestedSchema: confirmationSchema,
             }),
           },

@@ -7,6 +7,7 @@ interface Config {
   port: number;
   apiUrl: string;
   serviceApiKey: string;
+  corsOrigin: string;
 }
 
 const required = (name: string): string => {
@@ -29,4 +30,5 @@ export const config: Config = {
   port: Number(process.env.MCP_PORT ?? 3001),
   apiUrl: required('API_URL').replace(/\/$/, ''),
   serviceApiKey: required('SERVICE_API_KEY'),
+  corsOrigin: process.env.CORS_ORIGIN ?? '*',
 };

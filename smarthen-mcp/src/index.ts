@@ -1,9 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/server';
-import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { config } from './config.js';
 import { registerReadingTools } from './tools/readings.tools.js';
 import { registerConfigTools } from './tools/config.tools.js';
 import { registerCommandTools } from './tools/commands.tools.js';
+import { startStdioTransport } from './transports/stdio.transport.js';
+import { startHttpTransport } from './transports/http.transport.js';
 
 const createServer = (): McpServer => {
   const server = new McpServer({
@@ -24,6 +25,7 @@ const createServer = (): McpServer => {
           text: JSON.stringify({
             pong: true,
             apiUrl: config.apiUrl,
+            transport: config.transport,
             timestamp: new Date().toISOString(),
           }),
         },
@@ -31,7 +33,6 @@ const createServer = (): McpServer => {
     }),
   );
 
-  // Domain tools
   registerReadingTools(server);
   registerConfigTools(server);
   registerCommandTools(server);
@@ -39,5 +40,10 @@ const createServer = (): McpServer => {
   return server;
 };
 
-void serveStdio(createServer);
-console.error(`[smarthen-mcp] Server running on stdio (api: ${config.apiUrl})`);
+console.error(`[smarthen-mcp] Starting (transport=${config.transport}, api=${config.apiUrl})`);
+
+if (config.transport === 'http') {
+  startHttpTransport(createServer);
+} else {
+  startStdioTransport(createServer);
+}
