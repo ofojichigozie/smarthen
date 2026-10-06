@@ -25,8 +25,8 @@ ESP32 firmware for the **Smarthen** smart poultry management system. It monitors
 | On-board LED | GPIO 2 | Active LOW (most ESP32 DevKit boards) |
 | DHT22 | GPIO 4 | Temperature / humidity |
 | MQ-2 | GPIO 34 | Analog gas/smoke input |
-| Fan relay | GPIO 26 | Active HIGH |
-| Bulb relay | GPIO 27 | Active HIGH |
+| Fan relay | GPIO 26 | Active LOW |
+| Bulb relay | GPIO 27 | Active LOW |
 | Servo | GPIO 13 | Feed dispensing |
 | Buzzer | GPIO 14 | Active HIGH |
 

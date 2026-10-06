@@ -156,14 +156,14 @@ void readSensors() {
 
 void setFan(bool state) {
   currentReadings.fanState = state;
-  digitalWrite(FAN_RELAY_PIN, state ? HIGH : LOW);
+  digitalWrite(FAN_RELAY_PIN, state ? LOW : HIGH);
   Serial.print("[Actuator] Fan: ");
   Serial.println(state ? "ON" : "OFF");
 }
 
 void setBulb(bool state) {
   currentReadings.bulbState = state;
-  digitalWrite(BULB_RELAY_PIN, state ? HIGH : LOW);
+  digitalWrite(BULB_RELAY_PIN, state ? LOW : HIGH);
   Serial.print("[Actuator] Bulb: ");
   Serial.println(state ? "ON" : "OFF");
 }
@@ -479,13 +479,12 @@ void updateCommandStatus(String id, String status) {
 // ---------------------------------------------------------------------------
 
 void setup() {
-  // Claim relay pins FIRST (before Serial/delay) to prevent floating GPIO
-  // from briefly triggering the relays on boot.
   pinMode(FAN_RELAY_PIN, OUTPUT);
   pinMode(BULB_RELAY_PIN, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
-  digitalWrite(FAN_RELAY_PIN, LOW);
-  digitalWrite(BULB_RELAY_PIN, LOW);
+
+  digitalWrite(FAN_RELAY_PIN, HIGH);
+  digitalWrite(BULB_RELAY_PIN, HIGH);
   digitalWrite(BUZZER_PIN, LOW);
 
   Serial.begin(115200);
