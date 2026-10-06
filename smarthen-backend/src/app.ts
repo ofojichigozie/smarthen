@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.routes';
 import configRoutes from './routes/config.routes';
 import readingRoutes from './routes/reading.routes';
 import commandRoutes from './routes/command.routes';
+import aiRoutes from './routes/ai.routes';
 
 // Middleware
 import { errorHandler, notFound } from './middleware/error.middleware';
@@ -47,6 +48,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/readings', readingRoutes);
 app.use('/api/commands', commandRoutes);
+app.use('/api/ai', aiRoutes);
 
 // ── 404 & Error Handlers ──
 app.use(notFound);
