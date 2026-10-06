@@ -1,13 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { errorify } from '../utils/response.util';
 
-// Extend Express Request to include adminId
 declare global {
   namespace Express {
     interface Request {
       adminId?: string;
       isHardware?: boolean;
+      isService?: boolean;
     }
   }
 }
@@ -16,58 +16,56 @@ interface JwtPayload {
   adminId: string;
 }
 
-export const authenticateAdmin = (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
+export type AuthSource = 'admin' | 'hardware' | 'service';
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    errorify(res, 'No token provided', null, 401);
-    return;
-  }
-
-  const token = authHeader.split(' ')[1];
-
+const verifyJwt = (token: string): string | null => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-    req.adminId = decoded.adminId;
-    next();
+    return decoded.adminId;
   } catch {
-    errorify(res, 'Invalid or expired token', null, 401);
+    return null;
   }
 };
 
-export const authenticateHardware = (req: Request, res: Response, next: NextFunction): void => {
-  const apiKey = req.headers['x-api-key'];
-
-  if (!apiKey || apiKey !== process.env.HARDWARE_API_KEY) {
-    errorify(res, 'Invalid or missing API key', null, 401);
-    return;
-  }
-
-  req.isHardware = true;
-  next();
+const isServiceKey = (key: string | undefined): boolean => {
+  return !!key && key === process.env.MCP_SERVICE_API_KEY;
 };
 
-export const authenticateAny = (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
-  const apiKey = req.headers['x-api-key'];
+const isHardwareKey = (key: string | undefined): boolean => {
+  return !!key && key === process.env.HARDWARE_API_KEY;
+};
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-      req.adminId = decoded.adminId;
+export const authenticate = (sources: AuthSource[]): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
+    const apiKey = req.headers['x-api-key'] as string | undefined;
+    const serviceKey = req.headers['x-service-key'] as string | undefined;
+
+    // 1. Service account
+    if (sources.includes('service') && isServiceKey(serviceKey)) {
+      req.adminId = 'service:smarthen-mcp';
+      req.isService = true;
       next();
       return;
-    } catch {
-      // Fall through to hardware key check
     }
-  }
 
-  if (apiKey && apiKey === process.env.HARDWARE_API_KEY) {
-    req.isHardware = true;
-    next();
-    return;
-  }
+    // 2. Admin JWT
+    if (sources.includes('admin') && authHeader?.startsWith('Bearer ')) {
+      const adminId = verifyJwt(authHeader.split(' ')[1]);
+      if (adminId) {
+        req.adminId = adminId;
+        next();
+        return;
+      }
+    }
 
-  errorify(res, 'Authentication required', null, 401);
+    // 3. Hardware key
+    if (sources.includes('hardware') && isHardwareKey(apiKey)) {
+      req.isHardware = true;
+      next();
+      return;
+    }
+
+    errorify(res, 'Authentication required', null, 401);
+  };
 };

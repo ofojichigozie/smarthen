@@ -7,18 +7,28 @@ import {
   getCommandHistoryHandler,
   getPendingHandler,
 } from '../controllers/command.controller';
-import { authenticateAdmin, authenticateHardware } from '../middleware/auth.middleware';
+import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validate.middleware';
 import { createCommandSchema, executeCommandSchema } from '../validations/command.validation';
 
 const router = Router();
 
-router.get('/pending', authenticateHardware, getPendingHandler);
-router.put('/execute', authenticateHardware, validate(executeCommandSchema), executeCommandHandler);
+router.get('/pending', authenticate(['hardware']), getPendingHandler);
+router.put(
+  '/execute',
+  authenticate(['hardware']),
+  validate(executeCommandSchema),
+  executeCommandHandler
+);
 
-router.post('/', authenticateAdmin, validate(createCommandSchema), createCommandHandler);
-router.get('/history', authenticateAdmin, getCommandHistoryHandler);
-router.delete('/:id', authenticateAdmin, deleteCommandHandler);
-router.delete('/', authenticateAdmin, deleteAllCommandsHandler);
+router.post(
+  '/',
+  authenticate(['admin', 'service']),
+  validate(createCommandSchema),
+  createCommandHandler
+);
+router.get('/history', authenticate(['admin', 'service']), getCommandHistoryHandler);
+router.delete('/:id', authenticate(['admin']), deleteCommandHandler);
+router.delete('/', authenticate(['admin']), deleteAllCommandsHandler);
 
 export default router;
