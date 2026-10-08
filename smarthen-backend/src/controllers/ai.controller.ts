@@ -1,18 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { pipeUIMessageStreamToResponse, toUIMessageStream } from 'ai';
+import { pipeUIMessageStreamToResponse, toUIMessageStream, type UIMessage } from 'ai';
 import { streamChat } from '../services/ai.service';
 import { errorify } from '../utils/response.util';
 
 export const chat = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { message } = req.body;
+    const { messages } = req.body as { messages?: UIMessage[] };
 
-    if (typeof message !== 'string' || message.trim().length === 0) {
-      errorify(res, 'message is required', null, 400);
+    if (!Array.isArray(messages) || messages.length === 0) {
+      errorify(res, 'messages are required', null, 400);
       return;
     }
 
-    const result = await streamChat(message);
+    const result = await streamChat(messages);
 
     pipeUIMessageStreamToResponse({
       response: res,

@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Activity, Settings, Zap, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, Activity, Settings, Zap, LogOut, X, MessageSquare } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { useAuth } from '../../hooks/useAuth';
 import logo from '../../assets/smarthen-logo.png';
@@ -13,6 +13,7 @@ const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
   { to: '/readings', label: 'Readings', icon: <Activity className="h-4 w-4" /> },
   { to: '/controls', label: 'Controls', icon: <Zap className="h-4 w-4" /> },
+  { to: '/chat', label: 'Assistant', icon: <MessageSquare className="h-4 w-4" /> },
   { to: '/settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> },
 ];
 

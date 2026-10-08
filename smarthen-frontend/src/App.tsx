@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ReadingsPage } from './pages/ReadingsPage';
 import { ControlsPage } from './pages/ControlsPage';
+import { ChatPage } from './pages/ChatPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/readings" element={<ReadingsPage />} />
             <Route path="/controls" element={<ControlsPage />} />
+            <Route path="/chat" element={<ChatPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>
