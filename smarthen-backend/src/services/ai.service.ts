@@ -8,6 +8,8 @@ const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+const WRITE_TOOLS = new Set(['send_command', 'update_config']);
+
 const createClient = async (): Promise<MCPClient> => {
   if (!process.env.MCP_SERVER_URL) {
     throw new AppError('MCP_SERVER_URL is not configured', 500);
@@ -29,7 +31,14 @@ export const streamChat = async (messages: UIMessage[]) => {
   const mcpClient = await createClient();
 
   try {
-    const tools = await mcpClient.tools();
+    const mcpTools = await mcpClient.tools();
+
+    const tools = Object.fromEntries(
+      Object.entries(mcpTools).map(([name, mcpTool]) => [
+        name,
+        WRITE_TOOLS.has(name) ? { ...mcpTool, needsApproval: true } : mcpTool,
+      ])
+    );
 
     const result = streamText({
       model: google('gemini-3.8-flash'),

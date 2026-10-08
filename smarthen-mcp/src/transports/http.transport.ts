@@ -14,6 +14,8 @@ export const startHttpTransport = (createServerFn: () => McpServer): void => {
   const validateOrigin = localhostOriginValidation();
 
   const httpServer = createServer((req, res) => {
+    console.error(`[HTTP] ${req.method} ${req.url}`);
+
     // DNS rebinding guards — return 403 if the request looks malicious
     if (!validateHost(req, res) || !validateOrigin(req, res)) return;
 

@@ -15,6 +15,8 @@ export const registerReadingTools = (server: McpServer): void => {
         'Use this when the user asks about current conditions.',
     },
     async () => {
+      console.error('[Tool] get_latest_reading');
+
       try {
         const response = await apiClient.get<Reading>('/readings/latest');
         return toolSuccess(response.data);
@@ -51,6 +53,8 @@ export const registerReadingTools = (server: McpServer): void => {
       }),
     },
     async ({ limit, skip, from, to }) => {
+      console.error('[Tool] get_readings_history', { limit, skip, from, to });
+
       try {
         const response = await apiClient.get<PaginatedData<Reading>>('/readings/history', {
           limit,

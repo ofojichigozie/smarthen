@@ -1,12 +1,8 @@
-import { McpServer, inputRequired, acceptedContent } from '@modelcontextprotocol/server';
+import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { apiClient } from '../lib/api-client.js';
 import { Config } from '../types.js';
 import { toolSuccess, toolError } from '../lib/tool-result.js';
-
-const confirmationSchema = z.object({
-  confirm: z.boolean().meta({ title: 'Confirm' }),
-});
 
 export const registerConfigTools = (server: McpServer): void => {
   server.registerTool(
@@ -19,6 +15,8 @@ export const registerConfigTools = (server: McpServer): void => {
         'settings before suggesting or making changes.',
     },
     async () => {
+      console.error('[Tool] get_config');
+
       try {
         const response = await apiClient.get<Config>('/config');
         return toolSuccess(response.data);
@@ -32,9 +30,11 @@ export const registerConfigTools = (server: McpServer): void => {
     'update_config',
     {
       description:
-        'Update the farm configuration. The admin will be asked to confirm the ' +
-        'proposed changes before they are saved. Use this when the user asks to ' +
-        'change thresholds, toggle automation modes, or modify the feeding schedule.',
+        'Update the farm configuration, including temperature/humidity thresholds, ' +
+        'gas alert threshold, automation modes (fan, bulb, buzzer), and the daily ' +
+        'feeding schedule. Use this only when the user explicitly asks to change ' +
+        'settings — do not call it proactively or as part of answering a question. ' +
+        'The change will be submitted for admin approval before being saved.',
       inputSchema: z.object({
         temperatureMin: z
           .number()
@@ -74,7 +74,7 @@ export const registerConfigTools = (server: McpServer): void => {
           .describe('Daily feeding times in HH:MM format, e.g. ["06:00", "18:00"]'),
       }),
     },
-    async (args, ctx) => {
+    async (args) => {
       const entries = Object.entries(args).filter(([, v]) => v !== undefined);
 
       if (entries.length === 0) {
@@ -84,35 +84,7 @@ export const registerConfigTools = (server: McpServer): void => {
         };
       }
 
-      // --- Pass 1: no answer yet, ask for confirmation --------------------
-      if (!ctx.mcpReq.inputResponses?.confirm) {
-        const summary = entries
-          .map(([key, value]) => `  • ${key} → ${JSON.stringify(value)}`)
-          .join('\n');
-
-        return inputRequired({
-          inputRequests: {
-            confirm: inputRequired.elicit({
-              message: `The assistant wants to update the farm configuration:\n\n${summary}\n\nConfirm?`,
-              requestedSchema: confirmationSchema,
-            }),
-          },
-        });
-      }
-
-      // --- Pass 2: user answered — check whether it was an acceptance ----
-      const confirmed = acceptedContent(ctx.mcpReq.inputResponses, 'confirm', confirmationSchema);
-
-      if (confirmed?.confirm !== true) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: 'Update declined. No changes were saved.',
-            },
-          ],
-        };
-      }
+      console.error('[Tool] update_config', args);
 
       try {
         const response = await apiClient.put<Config>('/config', args);

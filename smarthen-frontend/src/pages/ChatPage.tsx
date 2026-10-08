@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalResponses } from 'ai';
 import type { UIMessage } from 'ai';
 import { Bot, Loader2, MessageSquare, Send, User, Wrench } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { ToolApprovalCard } from '../components/ui/ToolApprovalCard';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -22,11 +23,12 @@ export const ChatPage = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const token = localStorage.getItem('smarthen-token');
 
-  const { messages, sendMessage, status, error } = useChat({
+  const { messages, sendMessage, status, error, addToolApprovalResponse } = useChat({
     transport: new DefaultChatTransport({
       api: `${API_URL}/ai/chat`,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     }),
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
   });
 
   const isLoading = status === 'submitted' || status === 'streaming';
@@ -77,7 +79,11 @@ export const ChatPage = () => {
           ) : (
             <div className="space-y-4">
               {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  onApprovalRespond={addToolApprovalResponse}
+                />
               ))}
               {isLoading && (
                 <div className="flex items-center gap-2 text-sm text-neutral-400">
@@ -119,11 +125,16 @@ export const ChatPage = () => {
   );
 };
 
+// ---------------------------------------------------------------------------
+// Message bubble
+// ---------------------------------------------------------------------------
+
 interface MessageBubbleProps {
   message: UIMessage;
+  onApprovalRespond: (response: { id: string; approved: boolean }) => void;
 }
 
-const MessageBubble = ({ message }: MessageBubbleProps) => {
+const MessageBubble = ({ message, onApprovalRespond }: MessageBubbleProps) => {
   const isUser = message.role === 'user';
 
   return (
@@ -156,7 +167,6 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      hr: () => <hr className="my-3 border-neutral-300" />,
                       p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                       strong: ({ children }) => (
                         <strong className="font-semibold text-neutral-900">{children}</strong>
@@ -183,6 +193,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
                           {children}
                         </a>
                       ),
+                      hr: () => <hr className="my-3 border-neutral-300" />,
                     }}
                   >
                     {part.text}
@@ -192,15 +203,39 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
             );
           }
 
-          if (part.type.startsWith('tool-')) {
-            const toolName = part.type.slice(5).replace(/_/g, ' ');
+          if (part.type === 'dynamic-tool' || part.type.startsWith('tool-')) {
+            const toolName = part.type === 'dynamic-tool' ? part.toolName : part.type.slice(5);
+            const state = 'state' in part ? part.state : undefined;
+
+            // Approval requested by the SDK
+            if (state === 'approval-requested') {
+              const approvalId = 'approval' in part ? (part as any).approval?.id : undefined;
+              const input = 'input' in part ? part.input : undefined;
+
+              return (
+                <ToolApprovalCard
+                  key={idx}
+                  toolName={toolName}
+                  input={input}
+                  onApprove={() =>
+                    approvalId && onApprovalRespond({ id: approvalId, approved: true })
+                  }
+                  onDeny={() =>
+                    approvalId && onApprovalRespond({ id: approvalId, approved: false })
+                  }
+                />
+              );
+            }
+
+            // Regular tool call badge
+            const label = toolName.replace(/_/g, ' ');
             return (
               <div
                 key={idx}
                 className="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-700"
               >
                 <Wrench className="h-3 w-3" />
-                {toolName}
+                {label}
               </div>
             );
           }
