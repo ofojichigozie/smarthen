@@ -14,8 +14,8 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 const suggestedPrompts = [
   'What is the current temperature in the farm?',
   'Show me the readings from the last 24 hours',
-  'What are the current thresholds?',
-  'When was the last feed dispensed?',
+  'Turn on the fan in the poultry house',
+  'Set the temperature threshold to 32°C',
 ];
 
 export const ChatPage = () => {
@@ -61,7 +61,7 @@ export const ChatPage = () => {
                 </div>
                 <h2 className="text-lg font-semibold text-neutral-900">Ask me about your farm</h2>
                 <p className="mt-1 text-sm text-neutral-500">
-                  Sensor data, history, and configuration in plain English.
+                  Sensor data, history, and controls in plain English.
                 </p>
                 <div className="mt-6 grid gap-2 sm:grid-cols-2">
                   {suggestedPrompts.map((prompt) => (
@@ -124,10 +124,6 @@ export const ChatPage = () => {
     </div>
   );
 };
-
-// ---------------------------------------------------------------------------
-// Message bubble
-// ---------------------------------------------------------------------------
 
 interface MessageBubbleProps {
   message: UIMessage;
@@ -194,6 +190,20 @@ const MessageBubble = ({ message, onApprovalRespond }: MessageBubbleProps) => {
                         </a>
                       ),
                       hr: () => <hr className="my-3 border-neutral-300" />,
+                      table: ({ children }) => (
+                        <div className="my-2 overflow-x-auto rounded border border-neutral-300">
+                          <table className="w-full border-collapse text-xs">{children}</table>
+                        </div>
+                      ),
+                      thead: ({ children }) => <thead className="bg-neutral-200">{children}</thead>,
+                      th: ({ children }) => (
+                        <th className="border border-neutral-300 px-2 py-1 text-left font-semibold">
+                          {children}
+                        </th>
+                      ),
+                      td: ({ children }) => (
+                        <td className="border border-neutral-300 px-2 py-1">{children}</td>
+                      ),
                     }}
                   >
                     {part.text}
@@ -232,7 +242,7 @@ const MessageBubble = ({ message, onApprovalRespond }: MessageBubbleProps) => {
             return (
               <div
                 key={idx}
-                className="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-700"
+                className="inline-flex w-fit items-center gap-2 self-start rounded-full bg-primary-100 px-3 py-1 text-xs text-primary-700"
               >
                 <Wrench className="h-3 w-3" />
                 {label}

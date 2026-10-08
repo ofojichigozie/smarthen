@@ -1,4 +1,4 @@
-import { AlertCircle, Check, X } from 'lucide-react';
+import { ShieldQuestion, Check, X } from 'lucide-react';
 import { Button } from './Button';
 
 interface ToolApprovalCardProps {
@@ -40,9 +40,9 @@ export const ToolApprovalCard = ({
   const summary = buildSummary(toolName, input);
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm">
-      <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
-      <span className="flex-1 text-amber-900">{summary}</span>
+    <div className="flex items-center gap-3 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-sm">
+      <ShieldQuestion className="h-4 w-4 shrink-0 text-primary-600" />
+      <span className="flex-1 text-primary-900">{summary}</span>
       <div className="flex shrink-0 gap-1">
         <Button variant="outline" size="sm" onClick={onDeny} disabled={isResponding}>
           <X className="h-3 w-3" />
