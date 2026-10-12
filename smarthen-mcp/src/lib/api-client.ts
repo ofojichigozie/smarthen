@@ -58,7 +58,7 @@ const request = async <T>(options: RequestOptions): Promise<ApiResponse<T>> => {
       method,
       headers: {
         'Content-Type': 'application/json',
-        'X-Service-Key': config.serviceApiKey,
+        'X-Service-Key': config.mcpServiceApiKey,
       },
       body: body ? JSON.stringify(body) : undefined,
     });

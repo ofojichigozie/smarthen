@@ -34,6 +34,20 @@ export const startHttpTransport = (createServerFn: () => McpServer): void => {
       return;
     }
 
+    if (config.mcpClientApiKey) {
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+
+      if (token !== config.mcpClientApiKey) {
+        res.writeHead(401, {
+          'WWW-Authenticate': 'Bearer',
+          'Content-Type': 'application/json',
+        });
+        res.end(JSON.stringify({ error: 'Unauthorized' }));
+        return;
+      }
+    }
+
     void nodeHandler(req, res);
   });
 

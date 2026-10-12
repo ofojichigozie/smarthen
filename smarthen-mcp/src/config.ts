@@ -6,7 +6,8 @@ interface Config {
   transport: TransportMode;
   port: number;
   apiUrl: string;
-  serviceApiKey: string;
+  mcpServiceApiKey: string;
+  mcpClientApiKey: string;
   corsOrigin: string;
 }
 
@@ -29,6 +30,7 @@ export const config: Config = {
   transport: parseTransport(process.env.MCP_TRANSPORT ?? 'stdio'),
   port: Number(process.env.MCP_PORT ?? 3001),
   apiUrl: required('API_URL').replace(/\/$/, ''),
-  serviceApiKey: required('SERVICE_API_KEY'),
+  mcpServiceApiKey: required('MCP_SERVICE_API_KEY'),
+  mcpClientApiKey: process.env.MCP_CLIENT_API_KEY ?? '',
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
 };

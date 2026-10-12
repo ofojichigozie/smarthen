@@ -19,6 +19,9 @@ const createClient = async (): Promise<MCPClient> => {
     transport: {
       type: 'http',
       url: process.env.MCP_SERVER_URL,
+      headers: {
+        Authorization: `Bearer ${process.env.MCP_CLIENT_API_KEY}`,
+      },
     },
   });
 };
