@@ -28,12 +28,22 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` and set at least:
+Configure the values in `.env` for your environment:
 
-- `MONGODB_URI` — your MongoDB connection string
-- `JWT_SECRET` — a strong random secret for signing admin tokens
-- `HARDWARE_API_KEY` — secret key shared with the ESP32 firmware
-- `CORS_ORIGIN` — frontend URL (default `http://localhost:5173` for development)
+| Variable | Purpose |
+|----------|---------|
+| `NODE_ENV` | Runtime environment; use `production` for production deployments. The example uses `development`. |
+| `PORT` | Backend HTTP port (default `5000`). |
+| `MONGODB_URI` | MongoDB connection string. Required. |
+| `JWT_SECRET` | Strong, unique secret used to sign admin JWTs; required for admin authentication. |
+| `CORS_ORIGIN` | Allowed browser origin; the example uses `http://localhost:5173`. If unset, the backend allows any origin. |
+| `HARDWARE_API_KEY` | Secret shared with the ESP32 firmware for hardware-authenticated API routes. |
+| `MCP_SERVICE_API_KEY` | Secret the MCP server uses to authenticate backend API requests; set the same value in `smarthen-mcp/.env`. |
+| `MCP_CLIENT_API_KEY` | Bearer key the backend sends when connecting to a protected MCP server over HTTP; set the same value in `smarthen-mcp/.env`. |
+| `GEMINI_API_KEY` | Google Gemini API key required for the backend's AI chat endpoint. |
+| `MCP_SERVER_URL` | MCP server's Streamable HTTP endpoint, such as `http://localhost:3001/mcp`; required for AI chat with MCP tools. |
+
+The MCP and AI variables are only needed when using those integrations. For AI chat with MCP tools, run the MCP server with HTTP transport and configure matching `MCP_CLIENT_API_KEY` values in both projects.
 
 ### 3. Seed the database
 

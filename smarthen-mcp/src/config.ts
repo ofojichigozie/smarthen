@@ -27,7 +27,7 @@ const parseTransport = (value: string): TransportMode => {
 };
 
 export const config: Config = {
-  transport: parseTransport(process.env.MCP_TRANSPORT ?? 'stdio'),
+  transport: parseTransport(process.env.MCP_TRANSPORT ?? 'http'),
   port: Number(process.env.MCP_PORT ?? 3001),
   apiUrl: required('API_URL').replace(/\/$/, ''),
   mcpServiceApiKey: required('MCP_SERVICE_API_KEY'),
